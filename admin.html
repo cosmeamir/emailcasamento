@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Presentes</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+    .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); overflow: hidden; }
+    .head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; }
+    h1 { font-size: 1.2rem; margin: 0; }
+    button { border: none; background: #70A076; color:#fff; padding: 8px 14px; border-radius: 999px; cursor:pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: .92rem; }
+    th { background: #f9fafb; }
+    .muted { color:#6b7280; }
+    .empty { padding: 28px; text-align:center; }
+    a.pdf { color:#2563eb; text-decoration:none; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <h1>Dashboard - Presentes Enviados</h1>
+        <button id="reload-btn" type="button">Atualizar</button>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+
+  <script>
+    const contentEl = document.getElementById('content')
+    const reloadBtn = document.getElementById('reload-btn')
+
+    const formatDate = iso => {
+      if (!iso) return '-'
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return iso
+      return d.toLocaleString('pt-PT')
+    }
+
+    const escapeHtml = value => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+
+    async function loadGifts() {
+      contentEl.innerHTML = '<p class="empty muted">Carregando dados...</p>'
+      try {
+        const response = await fetch('admin-gifts.php', { cache: 'no-store' })
+        const data = await response.json()
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || 'Falha ao carregar dados.')
+        }
+
+        const items = Array.isArray(data.items) ? data.items : []
+        if (!items.length) {
+          contentEl.innerHTML = '<p class="empty muted">Ainda não há comprovativos enviados.</p>'
+          return
+        }
+
+        const rows = items.map(item => `
+          <tr>
+            <td>${formatDate(item.submitted_at)}</td>
+            <td>${escapeHtml(item.sender_name)}</td>
+            <td>${escapeHtml(item.product_name)}</td>
+            <td>${escapeHtml(item.product_price)}</td>
+            <td>${escapeHtml(item.product_reference)}</td>
+            <td><a class="pdf" href="${escapeHtml(item.proof_url)}" target="_blank" rel="noopener">Ver PDF</a></td>
+          </tr>
+        `).join('')
+
+        contentEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>Presente</th>
+                <th>Valor</th>
+                <th>Referência</th>
+                <th>Comprovativo</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `
+      } catch (error) {
+        contentEl.innerHTML = `<p class="empty" style="color:#b42318;">${escapeHtml(error.message || 'Erro inesperado')}</p>`
+      }
+    }
+
+    reloadBtn.addEventListener('click', loadGifts)
+    loadGifts()
+  </script>
+</body>
+</html>
