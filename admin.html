@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Presentes</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+    .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); overflow: hidden; }
+    .head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap: 8px; }
+    h1 { font-size: 1.2rem; margin: 0; }
+    button { border: none; background: #70A076; color:#fff; padding: 8px 14px; border-radius: 999px; cursor:pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: .92rem; }
+    th { background: #f9fafb; }
+    .muted { color:#6b7280; }
+    .empty { padding: 28px; text-align:center; }
+    a.pdf { color:#2563eb; text-decoration:none; font-weight:600; }
+
+    .hidden { display: none; }
+    .login-panel { max-width: 420px; margin: 80px auto; }
+    .login-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .login-body input {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .95rem;
+    }
+    .error { color: #b42318; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="login-panel" class="card login-panel hidden">
+      <div class="head">
+        <h1>Painel de Login</h1>
+      </div>
+      <form id="login-form" class="login-body">
+        <label for="username">Utilizador</label>
+        <input id="username" name="username" type="text" placeholder="admin" required>
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" required>
+        <small id="login-feedback" class="error"></small>
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
+
+    <div id="dashboard-card" class="card hidden">
+      <div class="head">
+        <h1>Dashboard - Presentes Enviados</h1>
+        <div style="display:flex; gap:8px;">
+          <button id="reload-btn" type="button">Atualizar</button>
+          <button id="logout-btn" type="button" style="background:#b42318;">Sair</button>
+        </div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+
+  <script>
+    const contentEl = document.getElementById('content')
+    const reloadBtn = document.getElementById('reload-btn')
+    const logoutBtn = document.getElementById('logout-btn')
+    const loginPanel = document.getElementById('login-panel')
+    const dashboardCard = document.getElementById('dashboard-card')
+    const loginForm = document.getElementById('login-form')
+    const loginFeedback = document.getElementById('login-feedback')
+
+    const formatDate = iso => {
+      if (!iso) return '-'
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return iso
+      return d.toLocaleString('pt-PT')
+    }
+
+    const escapeHtml = value => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+
+    async function checkSession() {
+      const res = await fetch('admin-auth.php?action=status', { cache: 'no-store' })
+      const data = await res.json()
+      return Boolean(res.ok && data.ok && data.logged_in)
+    }
+
+    function showLogin() {
+      loginPanel.classList.remove('hidden')
+      dashboardCard.classList.add('hidden')
+    }
+
+    function showDashboard() {
+      loginPanel.classList.add('hidden')
+      dashboardCard.classList.remove('hidden')
+    }
+
+    async function login(username, password) {
+      const res = await fetch('admin-auth.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+
+      const data = await res.json().catch(() => ({ ok: false, message: 'Resposta inválida do servidor.' }))
+      if (!res.ok || !data.ok) throw new Error(data.message || 'Falha no login.')
+      return true
+    }
+
+    async function logout() {
+      await fetch('admin-auth.php?action=logout', { method: 'POST' })
+      showLogin()
+    }
+
+    async function loadGifts() {
+      contentEl.innerHTML = '<p class="empty muted">Carregando dados...</p>'
+      try {
+        const response = await fetch('admin-gifts.php', { cache: 'no-store' })
+        const data = await response.json()
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || 'Falha ao carregar dados.')
+        }
+
+        const items = Array.isArray(data.items) ? data.items : []
+        if (!items.length) {
+          contentEl.innerHTML = '<p class="empty muted">Ainda não há comprovativos enviados.</p>'
+          return
+        }
+
+        const rows = items.map(item => `
+          <tr>
+            <td>${formatDate(item.submitted_at)}</td>
+            <td>${escapeHtml(item.sender_name)}</td>
+            <td>${escapeHtml(item.product_name)}</td>
+            <td>${escapeHtml(item.product_price)}</td>
+            <td>${escapeHtml(item.product_reference)}</td>
+            <td><a class="pdf" href="${escapeHtml(item.proof_url)}" target="_blank" rel="noopener">Ver PDF</a></td>
+          </tr>
+        `).join('')
+
+        contentEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>Presente</th>
+                <th>Valor</th>
+                <th>Referência</th>
+                <th>Comprovativo</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `
+      } catch (error) {
+        contentEl.innerHTML = `<p class="empty" style="color:#b42318;">${escapeHtml(error.message || 'Erro inesperado')}</p>`
+      }
+    }
+
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault()
+      loginFeedback.textContent = ''
+
+      const username = (document.getElementById('username').value || '').trim()
+      const password = (document.getElementById('password').value || '').trim()
+
+      try {
+        await login(username, password)
+        showDashboard()
+        await loadGifts()
+      } catch (error) {
+        loginFeedback.textContent = error.message || 'Credenciais inválidas.'
+      }
+    })
+
+    reloadBtn.addEventListener('click', loadGifts)
+    logoutBtn.addEventListener('click', logout)
+
+    ;(async () => {
+      const loggedIn = await checkSession().catch(() => false)
+      if (loggedIn) {
+        showDashboard()
+        loadGifts()
+      } else {
+        showLogin()
+      }
+    })()
+  </script>
+</body>
+</html>
