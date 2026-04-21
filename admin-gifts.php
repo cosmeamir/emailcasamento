@@ -1,11 +1,18 @@
 <?php
 declare(strict_types=1);
 
+session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'message' => 'Método não permitido.']);
+    exit;
+}
+
+if (empty($_SESSION['is_admin'])) {
+    http_response_code(401);
+    echo json_encode(['ok' => false, 'message' => 'Não autenticado.']);
     exit;
 }
 
