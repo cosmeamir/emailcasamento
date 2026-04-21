@@ -12,7 +12,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$recipient = 'geral@codigocosme.com';
+$mailboxEmail = 'presentes@josethemarco.com';
+$mailboxPassword = 'JosethMarco@2026';
+$recipient = $mailboxEmail;
+
+// A password é mantida aqui para configurações SMTP externas, quando aplicável.
+// Neste endpoint é usado `mail()`, que depende do servidor de email já configurado no hosting.
+if ($mailboxPassword === '') {
+    http_response_code(500);
+    echo json_encode([
+        'ok' => false,
+        'message' => 'Configuração de email inválida.'
+    ]);
+    exit;
+}
 $senderName = trim((string)($_POST['sender_name'] ?? ''));
 $productName = trim((string)($_POST['product_name'] ?? ''));
 $productPrice = trim((string)($_POST['product_price'] ?? ''));
@@ -94,9 +107,10 @@ if ($fileContent === false) {
 $boundary = '=_GiftProof_' . bin2hex(random_bytes(12));
 $headers = [];
 $headers[] = 'MIME-Version: 1.0';
-$headers[] = 'From: Wedding Site <no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '>';
-$headers[] = 'Reply-To: ' . $safeSender;
+$headers[] = 'From: Joseth e Marco <' . $mailboxEmail . '>';
+$headers[] = 'Reply-To: ' . $mailboxEmail;
 $headers[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+ini_set('sendmail_from', $mailboxEmail);
 
 $message = "--{$boundary}\r\n";
 $message .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n";
@@ -110,7 +124,7 @@ $message .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n\r\n";
 $message .= chunk_split(base64_encode($fileContent)) . "\r\n";
 $message .= "--{$boundary}--";
 
-$sent = mail($recipient, $subject, $message, implode("\r\n", $headers));
+$sent = mail($recipient, $subject, $message, implode("\r\n", $headers), '-f' . $mailboxEmail);
 
 if (!$sent) {
     http_response_code(500);
@@ -123,6 +137,5 @@ if (!$sent) {
 
 echo json_encode([
     'ok' => true,
-    'message' => 'Comprovativo enviado com sucesso para geral@codigocosme.com.'
+    'message' => 'Enviado com sucesso.'
 ]);
-
