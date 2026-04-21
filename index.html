@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joseth Filipe e Marco Lisboa</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="http://sweetinz.catanisthemes.com/wp-content/themes/sweetinz/images/default/favicon.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/themify-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+
+</head>
+<body>
+    <div class="loader">
+        <img src="assets/images/loading.gif" alt="Loading..." />
+    </div> 
+
+    <section class="music-website">
+        <div class="music-icon">
+            <i class="fa fa-music" aria-hidden="true"></i>
+        </div>
+
+        <div class="player">
+            <div style="display: flex; justify-content: space-evenly; padding: 0.5rem 1rem;">
+                <div class="player-controls">
+                   <i class="fas fa-play main-button" id="play" title="Play"></i>
+                </div>
+                <div class="music-text-container" style="color: coral; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">
+                    <h2 id="title"></h2>
+                    <h3 id="artist"></h3>
+                </div>
+            </div>
+            
+            <audio src=""></audio>
+            <!-- Progress -->
+            <div class="progress-container" id="progress-container">
+                <div class="progress" id="progress"></div>
+                <div class="duration-wrapper">
+                    <span id="current-time"></span>
+                    <span id="duration"></span>
+                </div>
+            </div>
+           
+        </div>
+    </section>
+
+    <section class="backtotop-container">
+        <a href="#" class="backtotop-inner"><i class="fa fa-angle-up"></i></a>
+    </section>
+
+    <header id="home">
+        <section class="mobile-nav">
+            <nav class="navbar">
+                <section class="main-nav-list">
+                    <a href="#home" class="main-nav-link"><span>Home</span></a>
+                    <a href="#casal" class="main-nav-link"><span class="item">O Casal</span></a>
+                    <a href="#lista" class="main-nav-link"><span>Lista de Presentes</span></a>
+                 
+                
+                </section>
+
+                <div class="navbar-logo">
+                    <a href="#">
+                       <img class="dark_logo" src="assets/images/dark_logo.svg" alt="dark_logo...">
+                       <img class="light_logo" src="assets/images/light_logo.svg" alt="light_logo...">
+                    </a>
+                </div>
+                <div class="nav-list-mobile">
+                    <a href="#home" class="nav-link"><span>Home</span></a>
+                    <a href="#casal" class="nav-link"><span>O Casal</span></a>
+                    <a href="#lista" class="nav-link"><span>Lista de Presentes</span></a>
+                    
+                   
+                </div>
+
+                <div class="menu">
+                    <div class="line line-1"></div>
+                    <div class="line line-2" style="height: 3px;"></div>
+                    <div class="line line-3"></div>
+                </div>
+            </nav>
+            
+            
+        </section>
+
+        <div class="slideShow-container" style="height: 100vh;">
+            
+            <ul class="ulElem banner-slideShow-ul">
+                <li class="liElem fade">
+                    <img class="banner_img banner_img--first" src="assets/images/green-home1-slider_001.jpg" alt="" style="width: 100%; opacity: 1; background-position: center center; background-size: cover;z-index: 20; visibility: inherit; background-repeat: no-repeat; height: 100vh; object-fit: cover;">
+                    
+                   
+                    <div class="opacity">
+                        <img src="assets/images/line_top.png" alt="flower-line-top" class="flower-line-top">
+                        <img src="assets/images/line_bottom.png" alt="flower-line-bottom" class="flower-line-bottom">
+                    
+                        <div class="caption-first">Joseth &amp; Marco</div>
+                        <div class="caption-second">A Celebração do Casamento de</div>
+                    </div>
+                </li>
+                <li class="liElem fade">
+                    <img class="banner_img banner_img--first" src="assets/images/green-home1-slider_001.jpg" alt="" style="width: 100%; opacity: 1; background-position: center center; background-size: cover;z-index: 20; visibility: inherit; background-repeat: no-repeat; height: 100vh; object-fit: cover;">
+                 
+                    <div class="opacity">
+                        <img src="assets/images/line_top.png" alt="flower-line-top" class="flower-line-top">
+                        <img src="assets/images/line_bottom.png" alt="flower-line-bottom" class="flower-line-bottom">
+                    
+                        <div class="caption-first">Ela disse sim.</div>
+                        <div class="caption-second">Decidimos viver felizes juntos.</div>
+                    </div>
+                </li>
+                <li class="liElem fade">
+                    <img class="banner_img banner_img--first" src="assets/images/green-home1-slider_001.jpg" alt="" style="width: 100%; opacity: 1; background-position: center center; background-size: cover;z-index: 20; visibility: inherit; background-repeat: no-repeat; height: 100vh; object-fit: cover;">
+                    <div class="opacity" style="width: 100%;">
+                        <img src="assets/images/line_top.png" alt="flower-line-top" class="flower-line-top">
+                        <img src="assets/images/line_bottom.png" alt="flower-line-bottom" class="flower-line-bottom">
+                    
+                        <div class="caption-first">Enfim Casados</div>
+                        <div class="caption-second">Meu amor por você é uma jornada</div>
+                    </div>
+                </li>
+            </ul>
+            <div>
+                <div class="circle" style="color: transparent;"></div>
+                <div class="circle" style="color: transparent;"></div>
+                <div class="circle" style="color: transparent;"></div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- <section style="background-color: aqua; width: 100%; height: 100vh;"></section> -->
+
+        <section id="when&where" class="when-where-section">
+
+            <h3 class="whenwhere-title">
+                <span>30 de Maio de 2026</span>
+            </h3>
+
+            <p class="whenwhere-description">
+              
+                
+            </p>
+
+
+            <div data-animation-type="fadeInUp" data-animation-delay="50" style="animation-duration: 700ms; animation-delay: 50ms;">
+                <img class="Texture-bottom" src="http://sweetinz.catanisthemes.com/wp-content/uploads/2018/04/green-flower.png" alt="Texture bottom">
+            </div>
+  
+        </section>
+
+      
+
+        <section class="cata-section cata-section-container-stretch has-animation cata-parallax-bg animated fadeInUp" id="section_w0yfacxy3y" data-prlx-speed="0.1" style="width: 100%; padding-top: 160px; padding-bottom: 160px; margin-bottom: 0px; background-image: url(&quot;assets/images/background_12.png&quot;); background-repeat: no-repeat; background-size: cover; background-position: center center; animation-duration: 700ms;" data-animation-type="fadeInUp" data-animation-duration="700" data-animation-delay="0">
+             <div class="cata-container">
+                 <div class="cata-row cata-columns-gap-30">
+                     <div class="cata-column wpb_column vc_column_container text-left ipad-padding-right-10percent ipad-padding-left-10percent mobile-padding-right-30px mobile-padding-left-30px col-xs-mobile-fullwidth col-sm-6 cata-bg-column-color" id="column_408iei66or" style="padding-top:70px;padding-right:50px;padding-bottom:70px;padding-left:50px;background-color:#f7f7f7;">
+                         <div class="cata-column-wrapper vc-column-innner-wrapper">
+                             <h3 id="title_yugoj" class="heading-title style2 text-center has-animation animated fadeInUp" data-animation-type="fadeInUp" data-animation-duration="700" data-animation-delay="200" style="animation-duration: 700ms; animation-delay: 200ms;">
+                                 <span>We are Together</span>
+                             </h3>
+                             <div id="cata_empty_space_bkaax" class="cata-empty-space cata-element" style="height: 25px">
+                             </div>
+                             <div id="cata_column_text_yhmrg" class="cata-text-column cata-element cata-body-color has-animation animated fadeInUp" data-animation-type="fadeInUp" data-animation-duration="700" data-animation-delay="100" style="animation-duration: 700ms; animation-delay: 100ms;">
+                                 <div class="text_wrapper">
+                                     <p style="text-align: center;">Com muita alegria, partilhamos este momento especial das nossas vidas com vocês 💛 <br>
+
+Apresentamos a  lista de presentes que vai ajudar o início desta nova etapa. Caso desejem, podem optar por oferecer outro presente que não consta na lista. <br>
+
+Desde já o nosso muito obrigado por fazerem parte da nossa história ✨<br><br>
+
+Com todo nosso carinho, <br>
+Joseth e Marco🤍</p>
+                                 </div>        
+                             </div>
+                             
+                         </div>
+                     </div>
+                             <div class="cata-column wpb_column vc_column_container col-xs-mobile-fullwidth col-sm-6" id="column_a2wbzyzk82">
+                                 <div class="cata-column-wrapper vc-column-innner-wrapper"></div>
+                             </div>           
+                 </div> 
+             </div>
+        </section>
+            
+       
+
+       <section id="ourGallery" class="section-bestMoments" style="background-image: url('http://sweetinz.catanisthemes.com/wp-content/uploads/2018/04/background_14.jpg');">
+        <h1>Best Moments</h1>
+      
+
+        <div class="slideshow-bestMoments">
+
+            <div class="mySlides-bestMoments">
+                <img width="1170" height="705" class="fade" src="assets/images/foto1.jpg" alt="" loading="lazy">
+                
+            </div>
+
+            <div class="mySlides-bestMoments">
+                <img width="1170" height="705" class="fade" src="assets/images/foto2.jpg" alt="" loading="lazy">
+              
+            </div>
+
+            <div class="mySlides-bestMoments">
+                <img width="1170" height="705" class="fade" src="assets/images/foto3.jpg" alt="" loading="lazy">
+               
+            </div>
+            <div class="mySlides-bestMoments">
+                <img width="1170" height="705" class="fade" src="assets/images/foto4.jpg" alt="" loading="lazy">
+               
+            </div>
+            <div class="mySlides-bestMoments">
+                <img width="1170" height="705" class="fade" src="assets/images/foto5.jpg" alt="" loading="lazy">
+               
+            </div>
+
+            
+
+        </div>
+        <br>
+
+        <div class="dot-bestMoments-container" style="text-align:center;position: absolute;margin-top: -50px;">
+            <span class="dot-bestMoments"></span> 
+            <span class="dot-bestMoments"></span> 
+            <span class="dot-bestMoments"></span> 
+            <span class="dot-bestMoments"></span> 
+        </div>
+       </section>
+
+      
+   
+      
+
+      <section id="lista" class="gift-list-section">
+        <div class="gift-list-container">
+          <h2>Lista de Presentes</h2>
+         
+          <div class="gift-shop-grid" id="gift-shop-grid"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="gift-modal-overlay" id="gift-modal-overlay" aria-hidden="true">
+      <div class="gift-modal" role="dialog" aria-modal="true" aria-labelledby="gift-modal-title">
+        <button type="button" class="gift-modal-close" id="gift-modal-close" aria-label="Fechar pop-up">&times;</button>
+        <h3 id="gift-modal-title">Oferecer Presente</h3>
+        <div class="gift-modal-product" id="gift-modal-product"></div>
+        <div class="gift-transfer-box">
+          <h4>Dados para transferência</h4>
+          <p><strong>Nome:</strong> EURAN COMERCIO PRESTACAO SERVICOS LDA</p>
+          <p><strong>Nº de Conta:</strong> 04343265410002</p>
+          <p><strong>IBAN:</strong> 004000004343265410241</p>
+          <p><strong>Referência:</strong> <span id="gift-transfer-reference">Presente de Casamento 0000</span></p>
+        </div>
+        <form id="gift-proof-form" class="gift-proof-form">
+          <label for="gift-sender-name">Seu nome completo</label>
+          <input type="text" id="gift-sender-name" name="gift-sender-name" placeholder="Digite o seu nome" required>
+          <label for="gift-proof">Submeter comprovativo (PDF até 1MB)</label>
+          <input type="file" id="gift-proof" name="gift-proof" accept="application/pdf" required>
+          <small id="gift-proof-feedback"></small>
+          <button type="submit" class="gift-submit-btn">Enviar comprovativo</button>
+        </form>
+      </div>
+    </div>
+
+    <footer id="rsvp" class="footer-joinWhitUs" style="width: 100%; ">
+        
+                
+        
+        <div class="copyright animated fadeInUp" data-animation-type="fadeInUp" data-animation-duration="700" data-animation-delay="200" style="animation-duration: 700ms; animation-delay: 200ms;color: #bbb;">© 2026 <span style="color: #fff;">Joseth & Marco</span>. Feito por </i><span style="color: #fff;"> Código Cosme</span>. All Rights Reserved.</div>
+        
+            
+        </div>
+    </footer>
+    </section>
+<script>
+      // Edite aqui as imagens dos presentes (1 por 1)
+      window.giftProductsConfig = [
+
+      { name: 'Exaustor telescópico, 60 cm', price: 291000, behavior: 'popup', image: 'assets/images/gifts/euro/1.png' },
+  { name: 'Placa a gás, 60 cm, Inox', price: 475000, behavior: 'popup', image: 'assets/images/gifts/euro/2.png' },
+  { name: 'Forno integrável, 60 x 60', price: 665000, behavior: 'popup', image: 'assets/images/gifts/euro/3.png' },
+  { name: 'Micro-ondas integrável', price: 484000, behavior: 'popup', image: 'assets/images/gifts/euro/4.png' },
+  { name: 'Congelador de instalação', price: 2087000, behavior: 'popup', image: 'assets/images/gifts/euro/5.png' },
+  { name: 'Frigorífico de instalação', price: 2087000, behavior: 'popup', image: 'assets/images/gifts/euro/6.png' },
+  { name: 'Máquina de Lavar Loiça', price: 957000, behavior: 'popup', image: 'assets/images/gifts/euro/7.png' },
+  { name: 'Máquina de Lavar Roupa', price: 957000, behavior: 'popup', image: 'assets/images/gifts/euro/8.png' },
+  { name: 'Moinho de café, Preto', price: 181870, behavior: 'popup', image: 'assets/images/gifts/euro/9.png' },
+  { name: 'Serie 6, Liquidificador', price: 541000, behavior: 'popup', image: 'assets/images/gifts/euro/10.png' },
+
+
+
+
+  { name: 'SAMSUNG | Crystal UHD 55', price: 642400 , image: 'assets/images/gifts/1.png', link: 'https://hiper.ao/product/samsung-crystal-uhd-3/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwIBleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A'},
+  { name: 'MIDEA | Arca 142L', price: 195000 , image: 'assets/images/gifts/2.png' , link: 'https://hiper.ao/product/midea-arca-142l-3/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwL5leHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A'},
+  { name: 'MIDEA | AC SPLIT 9000Btu', price: 270500 , image: 'assets/images/gifts/3.png', link: 'https://hiper.ao/product/midea-ac-split-9000btu/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwQNleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A' },
+  { name: 'CLEA | Máquina de Pipoca', price: 20400 , image: 'assets/images/gifts/4.png', link: 'https://hiper.ao/product/clea-maquina-de-pipoca/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwcRleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A' },
+  { name: 'Black + Decker | Air Fryer 4.5L', price: 97200 , image: 'assets/images/gifts/5.png', link: 'https://hiper.ao/product/black-decker-air-fryer-4-5l/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwmhleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A' },
+  { name: 'Black + Decker | Picador de Alimentos', price: 34700 , image: 'assets/images/gifts/6.png', link: 'https://hiper.ao/product/black-decker-picador-de-alimentos/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAREwoRleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAaeqmdBxO1lBWM8sfmADn-o3YFhfcglUUOVrZI9RJluOoq-11E-f7Wbao3kpMw_aem_zqaULRx4VJyOG7HRYm2K3A' },
+  { name: 'ALMOFADA AREIA GRAVADA 45X45', price: 18745 , image: 'assets/images/gifts/7.png', link: 'https://www.dakaza.co.ao/loja/textil/textil-decorativo/almof-areia-gravada-45x45/' },
+  { name: 'ALMOFADA COSTA DE LINHO 45X45', price: 14995 , image: 'assets/images/gifts/8.png', link: 'https://www.dakaza.co.ao/loja/textil/textil-decorativo/almof-costa-de-linho-45x45/' },
+  { name: 'BALDE CHAMPANHE INOX 184.99', price: 42900 , image: 'assets/images/gifts/9.png', link: 'https://www.dakaza.co.ao/loja/mesa-e-cozinha/cozinha/balde-champanhe-inox-184-99/' },
+  { name: 'CAIXA CHAS ACACIA VIDRO 26,5X9X9 NATURAL', price: 24900 , image: 'assets/images/gifts/10.png', link: 'https://www.dakaza.co.ao/loja/mesa-e-cozinha/cozinha/caixa-chas-acacia-vidro-265x9x9-natural/' },
+  { name: 'DECANTADOR VIDRO 18,7X18,7X22 1200ML', price: 22900 , image: 'assets/images/gifts/11.png', link: 'https://ncr.com/produto-1https://www.dakaza.co.ao/loja/mesa-e-cozinha/mesa/decantador-vidro-187x187x22-1200ml/' },
+  { name: 'Aspirador sem saco 600w 2.4l preto', price: 325965 , image: 'assets/images/gifts/12.png', link: 'https://www.ncrangola.com/aspirador-sem-saco-600w-24l-preto/p' },
+  { name: 'TV 65" A PRO 2025', price: 925840 , image: 'assets/images/gifts/13.png', link: 'https://www.ncrangola.com/tv-65-a-pro-2025/p' },
+  { name: 'Barra de Som Stage Air V2 2.0 Preto', price: 57135 , image: 'assets/images/gifts/14.png', link: 'https://www.ncrangola.com/barra-de-som-stage-air-v2-20-preto/p' },
+  { name: 'Balança WC MI smart S400', price: 29755 , image: 'assets/images/gifts/15.png', link: 'https://www.ncrangola.com/balanca-wc-mi-smart-s400/p' },
+  { name: 'Batedeira 375w Com Taça De 3L Branco', price: 78450 , image: 'assets/images/gifts/16.png', link: 'https://www.ncrangola.com/batedeira-375w-com-taca-de-3l-branco/p' },
+  { name: 'Impressora Deskjet E-AIO 2976 ADV. (7.5) WIFI', price: 61815 , image: 'assets/images/gifts/17.png', link: 'https://www.ncrangola.com/impressora-deskjet-e-aio-2976-adv-7-5-wifi/p' },
+  { name: 'Arca Vertical 151L Branca', price: 209990 , image: 'assets/images/gifts/18.png', link: 'https://www.ncrangola.com/arca-vertical-151l-branca/p' },
+  { name: 'Ar Condicionado 12000 Btu Split Inverter (In+Out)', price: 390990 , image: 'assets/images/gifts/19.png', link: 'https://www.ncrangola.com/ar-condicionado-12000-btu-split-inverter-in-out/p' },
+  { name: 'Frois', price: 32900 , image: 'assets/images/gifts/20.png', link: 'https://www.kindahome.co.ao/collections/loica/products/83338?variant=43675126071590' },
+  { name: 'Chaudry', price: 23800 , image: 'assets/images/gifts/21.png', link: 'https://www.kindahome.co.ao/collections/faqueiros/products/85445?variant=43675289223462    ' },
+  { name: 'Neres', price: 36000 , image: 'assets/images/gifts/22.png', link: 'https://www.kindahome.co.ao/collections/acessorios-de-mesa/products/84627?variant=43969333526822' },
+  { name: 'Varinha Mágica Robot 750w Easy', price: 21900 , image: 'assets/images/gifts/23.png', link: 'https://www.ncrangola.com/varinha-magica-robot-750w-easy/p' },
+  { name: 'Jarro Elétrico 2200W Loiza', price: 26990 , image: 'assets/images/gifts/24.png', link: 'https://www.ncrangola.com/jarro-eletrico-2200w-loiza/p' },
+  { name: 'Batedeira 450w com suporte', price: 42560 , image: 'assets/images/gifts/25.png', link: 'https://www.ncrangola.com/batedeira-450w-com-suporte/p'  },
+  { name: 'Grelhador Maxim´S Plus Resistência', price: 54990 , image: 'assets/images/gifts/26.png', link: 'https://www.ncrangola.com/grelhador-maxim-s-plus/p'  },
+  { name: 'Ventoinha MI DE Pé SMART FAN', price: 98520 , image: 'assets/images/gifts/27.png', link: 'https://www.ncrangola.com/ventoinha-mi-de-pe-smart-fan-1c-wht/p'  },
+  { name: 'Barra de Som Stage Se Mini 2.0', price: 40550 , image: 'assets/images/gifts/28.png', link: 'https://www.ncrangola.com/barra-de-som-stage-se-mini-2-0-24w-preto/p'  },
+  { name: 'Coluna Tower Sky Charm Pro BT', price: 81540 , image: 'assets/images/gifts/29.png' , link: 'https://www.ncrangola.com/coluna-tower-sky-charm-pro-bt-40w-preta/p' },
+  { name: 'TV 65 Led DU7105 Uhd 4k Smart', price: 1067990 , image: 'assets/images/gifts/30.png', link: 'https://www.ncrangola.com/tv-65-led-samsung-du7105-uhd-4k-smart-tv/p'  },
+  { name: 'Arca Vertical 480L Nofrost Branca', price: 589990 , image: 'assets/images/gifts/31.png' , link: 'https://www.ncrangola.com/arca-vertical-480l-nofrost-branca/p' },
+
+
+
+      ]
+
+      // Para definir link individual, adicione `link` em cada produto.
+      // Exemplo:
+      // { name: 'SAMSUNG | Crystal UHD 55', price: 642400, image: 'assets/images/gifts/1.png', link: 'https://ncr.com/produto-1' }
+    </script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
