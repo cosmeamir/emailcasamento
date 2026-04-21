@@ -505,10 +505,12 @@ const giftProofForm = $.getElementById('gift-proof-form')
 const giftProofInput = $.getElementById('gift-proof')
 const giftProofFeedback = $.getElementById('gift-proof-feedback')
 const giftSenderNameInput = $.getElementById('gift-sender-name')
+const SENT_GIFTS_STORAGE_KEY = 'sentWeddingGifts'
 let currentGiftSelection = {
   product: 'Presente',
   price: '',
-  reference: '0000'
+  reference: '0000',
+  buttonSelector: ''
 }
 const defaultGiftProducts = [
 
@@ -599,6 +601,42 @@ const giftReferenceByProduct = (() => {
   return referenceMap
 })()
 
+const getSentGiftReferences = () => {
+  try {
+    const storedRefs = JSON.parse(localStorage.getItem(SENT_GIFTS_STORAGE_KEY) || '[]')
+    if (!Array.isArray(storedRefs)) return []
+    return storedRefs.map(item => String(item))
+  } catch (error) {
+    return []
+  }
+}
+
+const markGiftButtonAsSent = button => {
+  if (!button) return
+  button.disabled = true
+  button.classList.add('gift-offer-btn--sent')
+  button.textContent = 'Presente enviado'
+}
+
+const applySentGiftButtonsState = () => {
+  if (!giftShopGrid) return
+  const sentGiftReferences = new Set(getSentGiftReferences())
+  giftShopGrid.querySelectorAll('.gift-offer-btn[data-behavior="popup"]').forEach(button => {
+    const referenceCode = String(button.dataset.reference || '')
+    if (sentGiftReferences.has(referenceCode)) {
+      markGiftButtonAsSent(button)
+    }
+  })
+}
+
+const persistSentGiftReference = reference => {
+  const normalizedReference = String(reference || '').trim()
+  if (!normalizedReference) return
+  const sentGiftReferences = new Set(getSentGiftReferences())
+  sentGiftReferences.add(normalizedReference)
+  localStorage.setItem(SENT_GIFTS_STORAGE_KEY, JSON.stringify(Array.from(sentGiftReferences)))
+}
+
 if (giftShopGrid) {
   const cardsMarkup = giftProducts.map((product, index) => {
     const buttonLabel = product.behavior === 'link' ? 'Ver no site' : 'Oferecer Presente'
@@ -614,6 +652,7 @@ if (giftShopGrid) {
   `
   }).join('')
   giftShopGrid.innerHTML = cardsMarkup
+  applySentGiftButtonsState()
 }
 
 const closeGiftModal = () => {
@@ -627,6 +666,7 @@ if (giftShopGrid && giftModalOverlay && giftModalProduct) {
     const button = event.target.closest('.gift-offer-btn')
     if (!button) return
     const behavior = String(button.dataset.behavior || 'popup').trim().toLowerCase()
+    if (button.disabled) return
 
     if (behavior === 'link') {
       const productName = button.dataset.product || ''
@@ -642,7 +682,8 @@ if (giftShopGrid && giftModalOverlay && giftModalProduct) {
     currentGiftSelection = {
       product,
       price,
-      reference: referenceCode
+      reference: referenceCode,
+      buttonSelector: `.gift-offer-btn[data-reference="${referenceCode}"][data-behavior="popup"]`
     }
     giftModalProduct.innerHTML = `<p><strong>Produto:</strong> ${product}</p><p><strong>Valor:</strong> ${price}</p>`
     if (giftTransferReference) {
@@ -711,7 +752,12 @@ if (giftProofForm && giftProofInput && giftProofFeedback) {
       }
 
       giftProofFeedback.style.color = '#4e8a59'
-      giftProofFeedback.textContent = result.message || 'Comprovativo enviado com sucesso.'
+      giftProofFeedback.textContent = result.message || 'Enviado com sucesso.'
+      persistSentGiftReference(currentGiftSelection.reference)
+      const selectedButton = giftShopGrid
+        ? giftShopGrid.querySelector(currentGiftSelection.buttonSelector)
+        : null
+      markGiftButtonAsSent(selectedButton)
       giftProofForm.reset()
       setTimeout(closeGiftModal, 1500)
     } catch (error) {
