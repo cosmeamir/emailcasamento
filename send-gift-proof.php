@@ -72,6 +72,7 @@ if ($mimeType !== 'application/pdf') {
 $uploadDir = __DIR__ . '/uploads/gift-proofs';
 $dataDir = __DIR__ . '/data';
 $dataFile = $dataDir . '/gift-submissions.json';
+$statusFile = $dataDir . '/gift-status.json';
 
 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
     http_response_code(500);
@@ -129,6 +130,38 @@ if (file_put_contents($dataFile, json_encode($submissions, JSON_PRETTY_PRINT | J
     echo json_encode([
         'ok' => false,
         'message' => 'Não foi possível guardar os dados do presente.'
+    ]);
+    exit;
+}
+
+$giftStatus = ['blocked_references' => []];
+if (is_file($statusFile)) {
+    $statusRaw = file_get_contents($statusFile);
+    if ($statusRaw !== false) {
+        $decodedStatus = json_decode($statusRaw, true);
+        if (is_array($decodedStatus)) {
+            $giftStatus = $decodedStatus;
+        }
+    }
+}
+
+$blockedReferences = $giftStatus['blocked_references'] ?? [];
+if (!is_array($blockedReferences)) {
+    $blockedReferences = [];
+}
+
+$blockedSet = [];
+foreach ($blockedReferences as $reference) {
+    $blockedSet[(string)$reference] = true;
+}
+$blockedSet[$productReference] = true;
+
+$giftStatus['blocked_references'] = array_values(array_keys($blockedSet));
+if (file_put_contents($statusFile, json_encode($giftStatus, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) {
+    http_response_code(500);
+    echo json_encode([
+        'ok' => false,
+        'message' => 'Não foi possível atualizar o estado do presente.'
     ]);
     exit;
 }

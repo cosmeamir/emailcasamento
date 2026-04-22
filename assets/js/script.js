@@ -611,6 +611,20 @@ const getSentGiftReferences = () => {
   }
 }
 
+const fetchBlockedGiftReferences = async () => {
+  try {
+    const response = await fetch('gift-status.php', { cache: 'no-store' })
+    const data = await response.json()
+    if (!response.ok || !data.ok || !Array.isArray(data.blocked_references)) {
+      return []
+    }
+
+    return data.blocked_references.map(item => String(item))
+  } catch (error) {
+    return []
+  }
+}
+
 const markGiftButtonAsSent = button => {
   if (!button) return
   button.disabled = true
@@ -618,9 +632,12 @@ const markGiftButtonAsSent = button => {
   button.textContent = 'Presente enviado'
 }
 
-const applySentGiftButtonsState = () => {
+const applySentGiftButtonsState = blockedReferences => {
   if (!giftShopGrid) return
-  const sentGiftReferences = new Set(getSentGiftReferences())
+  const sentGiftReferences = new Set([
+    ...getSentGiftReferences(),
+    ...(Array.isArray(blockedReferences) ? blockedReferences.map(item => String(item)) : [])
+  ])
   giftShopGrid.querySelectorAll('.gift-offer-btn[data-behavior="popup"]').forEach(button => {
     const referenceCode = String(button.dataset.reference || '')
     if (sentGiftReferences.has(referenceCode)) {
@@ -653,6 +670,7 @@ if (giftShopGrid) {
   }).join('')
   giftShopGrid.innerHTML = cardsMarkup
   applySentGiftButtonsState()
+  fetchBlockedGiftReferences().then(applySentGiftButtonsState)
 }
 
 const closeGiftModal = () => {
