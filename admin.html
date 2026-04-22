@@ -8,10 +8,12 @@
     body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
     .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
     .card { background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); overflow: hidden; }
-    .head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap: 8px; }
+    .head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap: 8px; flex-wrap: wrap; }
     h1 { font-size: 1.2rem; margin: 0; }
+    .head-actions { display:flex; gap:8px; flex-wrap: wrap; }
     button { border: none; background: #70A076; color:#fff; padding: 8px 14px; border-radius: 999px; cursor:pointer; }
-    table { width: 100%; border-collapse: collapse; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
     th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: .92rem; }
     th { background: #f9fafb; }
     .muted { color:#6b7280; }
@@ -28,6 +30,28 @@
       font-size: .95rem;
     }
     .error { color: #b42318; font-size: .9rem; }
+
+    @media (max-width: 768px) {
+      .wrap { margin: 20px auto; }
+      .login-panel { margin: 24px auto; }
+      .head { padding: 14px; }
+      h1 { font-size: 1.05rem; }
+      .head-actions { width: 100%; }
+      .head-actions button { flex: 1; }
+      table { min-width: 0; }
+      thead { display: none; }
+      tbody, tr, td { display: block; width: 100%; }
+      tr { border-bottom: 1px solid #e5e7eb; padding: 8px 12px; }
+      td { border: none; padding: 6px 0; font-size: .9rem; }
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: #6b7280;
+        font-size: .78rem;
+        margin-bottom: 2px;
+      }
+      td:last-child { padding-bottom: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -49,7 +73,7 @@
     <div id="dashboard-card" class="card hidden">
       <div class="head">
         <h1>Dashboard - Presentes Enviados</h1>
-        <div style="display:flex; gap:8px;">
+        <div class="head-actions">
           <button id="reload-btn" type="button">Atualizar</button>
           <button id="logout-btn" type="button" style="background:#b42318;">Sair</button>
         </div>
@@ -131,16 +155,17 @@
 
         const rows = items.map(item => `
           <tr>
-            <td>${formatDate(item.submitted_at)}</td>
-            <td>${escapeHtml(item.sender_name)}</td>
-            <td>${escapeHtml(item.product_name)}</td>
-            <td>${escapeHtml(item.product_price)}</td>
-            <td>${escapeHtml(item.product_reference)}</td>
-            <td><a class="pdf" href="${escapeHtml(item.proof_url)}" target="_blank" rel="noopener">Ver PDF</a></td>
+            <td data-label="Data">${formatDate(item.submitted_at)}</td>
+            <td data-label="Nome">${escapeHtml(item.sender_name)}</td>
+            <td data-label="Presente">${escapeHtml(item.product_name)}</td>
+            <td data-label="Valor">${escapeHtml(item.product_price)}</td>
+            <td data-label="Referência">${escapeHtml(item.product_reference)}</td>
+            <td data-label="Comprovativo"><a class="pdf" href="${escapeHtml(item.proof_url)}" target="_blank" rel="noopener">Ver PDF</a></td>
           </tr>
         `).join('')
 
         contentEl.innerHTML = `
+          <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -154,6 +179,7 @@
             </thead>
             <tbody>${rows}</tbody>
           </table>
+          </div>
         `
       } catch (error) {
         contentEl.innerHTML = `<p class="empty" style="color:#b42318;">${escapeHtml(error.message || 'Erro inesperado')}</p>`
