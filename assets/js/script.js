@@ -638,7 +638,7 @@ const applySentGiftButtonsState = blockedReferences => {
     ...getSentGiftReferences(),
     ...(Array.isArray(blockedReferences) ? blockedReferences.map(item => String(item)) : [])
   ])
-  giftShopGrid.querySelectorAll('.gift-offer-btn[data-behavior="popup"]').forEach(button => {
+  giftShopGrid.querySelectorAll('.gift-offer-btn').forEach(button => {
     const referenceCode = String(button.dataset.reference || '')
     if (sentGiftReferences.has(referenceCode)) {
       markGiftButtonAsSent(button)

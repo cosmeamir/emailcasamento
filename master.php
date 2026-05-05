@@ -77,6 +77,9 @@ declare(strict_types=1);
       <p class="muted">Aqui pode gerir presentes oferecidos: apagar registos e reativar/voltar a bloquear referências.</p>
       <div id="feedback" class="feedback"></div>
       <div id="table-container"></div>
+      <h2 style="margin:16px 0 8px;">Produtos do site</h2>
+      <p class="muted">Também pode marcar como <strong>Oferecido</strong> ou <strong>Anular</strong> para qualquer produto da lista principal.</p>
+      <div id="products-container"></div>
     </div>
   </div>
 </div>
@@ -88,11 +91,13 @@ declare(strict_types=1);
   const loginFeedback = document.getElementById('login-feedback')
   const feedbackEl = document.getElementById('feedback')
   const tableContainer = document.getElementById('table-container')
+  const productsContainer = document.getElementById('products-container')
   const refreshBtn = document.getElementById('refresh-btn')
   const logoutBtn = document.getElementById('logout-btn')
 
   let itemsCache = []
   let blockedSet = new Set()
+  let siteProductsCache = []
 
   const escapeHtml = value => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -195,6 +200,79 @@ declare(strict_types=1);
     `
   }
 
+  const getGiftReferenceBaseCode = value => {
+    const text = String(value || '')
+    let hash = 0
+    for (let index = 0; index < text.length; index += 1) {
+      hash = (hash * 31 + text.charCodeAt(index)) % 9000
+    }
+    return String(hash + 1000).padStart(4, '0')
+  }
+
+  async function loadSiteProductsFromScript() {
+    const response = await fetch('assets/js/script.js', { cache: 'no-store' })
+    const source = await response.text()
+    const match = source.match(/const\\s+defaultGiftProducts\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*\\n\\s*const\\s+normalizeGiftProduct/)
+    if (!match) return []
+    const arrayCode = `[${match[1]}]`
+    const list = Function(`"use strict"; return (${arrayCode});`)()
+    if (!Array.isArray(list)) return []
+
+    return list.map((product, index) => {
+      const name = String((product && product.name) || `Produto-${index + 1}`)
+      const reference = getGiftReferenceBaseCode(`${name}-${index}`)
+      return {
+        name,
+        behavior: String((product && product.behavior) || 'popup'),
+        price: Number((product && product.price) || 0),
+        reference
+      }
+    })
+  }
+
+  function renderProductsTable() {
+    if (!siteProductsCache.length) {
+      productsContainer.innerHTML = '<p class="muted">Não foi possível carregar os produtos do site.</p>'
+      return
+    }
+
+    const rows = siteProductsCache.map(item => {
+      const blocked = blockedSet.has(item.reference)
+      return `
+      <tr>
+        <td data-label="Produto">${escapeHtml(item.name)}</td>
+        <td data-label="Tipo">${escapeHtml(item.behavior)}</td>
+        <td data-label="Referência">${escapeHtml(item.reference)}</td>
+        <td data-label="Estado"><span class="badge ${blocked ? 'blocked' : 'active'}">${blocked ? 'Oferecido' : 'Ativo'}</span></td>
+        <td data-label="Ações">
+          <div class="row-actions">
+            ${blocked
+              ? `<button class="secondary" data-action="reactivate" data-reference="${escapeHtml(item.reference)}">Anular</button>`
+              : `<button class="warn" data-action="deactivate" data-reference="${escapeHtml(item.reference)}">Oferecido</button>`}
+          </div>
+        </td>
+      </tr>
+      `
+    }).join('')
+
+    productsContainer.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Tipo</th>
+              <th>Referência</th>
+              <th>Estado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `
+  }
+
   async function loadData() {
     setFeedback('A carregar dados...')
     const response = await fetch('master-gifts.php', { cache: 'no-store' })
@@ -207,6 +285,7 @@ declare(strict_types=1);
     itemsCache = Array.isArray(data.items) ? data.items : []
     blockedSet = new Set(Array.isArray(data.blocked_references) ? data.blocked_references.map(String) : [])
     renderTable()
+    renderProductsTable()
     setFeedback('Dados atualizados com sucesso.', 'ok')
   }
 
@@ -248,6 +327,10 @@ declare(strict_types=1);
       }
 
       await loadData()
+      if (!siteProductsCache.length) {
+        siteProductsCache = await loadSiteProductsFromScript()
+        renderProductsTable()
+      }
     } catch (error) {
       setFeedback(error.message || 'Erro inesperado.', 'error')
     } finally {
@@ -266,6 +349,8 @@ declare(strict_types=1);
       await login(username, password)
       showMaster()
       await loadData()
+      siteProductsCache = await loadSiteProductsFromScript()
+      renderProductsTable()
     } catch (error) {
       loginFeedback.textContent = error.message || 'Credenciais inválidas.'
     }
@@ -274,6 +359,10 @@ declare(strict_types=1);
   refreshBtn.addEventListener('click', async () => {
     try {
       await loadData()
+      if (!siteProductsCache.length) {
+        siteProductsCache = await loadSiteProductsFromScript()
+      }
+      renderProductsTable()
     } catch (error) {
       setFeedback(error.message || 'Erro ao atualizar dados.', 'error')
     }
@@ -291,6 +380,8 @@ declare(strict_types=1);
     showMaster()
     try {
       await loadData()
+      siteProductsCache = await loadSiteProductsFromScript()
+      renderProductsTable()
     } catch (error) {
       setFeedback(error.message || 'Erro ao carregar dados.', 'error')
     }
