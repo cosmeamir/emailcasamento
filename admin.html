@@ -220,17 +220,6 @@
         }).join('')
 
         contentEl.innerHTML = `
-          <h2 class="section-title">Todos os presentes (com ou sem comprovativo)</h2>
-          <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Produto</th><th>Tipo</th><th>Referência</th><th>Estado</th><th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>${productRows}</tbody>
-          </table>
-          </div>
           <h2 class="section-title">Comprovativos enviados</h2>
           ${items.length ? '' : '<p class="empty muted">Ainda não há comprovativos enviados.</p>'}
           ${items.length ? `
@@ -250,6 +239,20 @@
           </table>
           </div>
           ` : ''}
+          <h2 class="section-title">Todos os presentes (com ou sem comprovativo)</h2>
+          <p class="muted" style="padding:0 20px 10px;">Total de produtos listados: ${siteProducts.length}</p>
+          ${siteProducts.length ? `
+          <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th><th>Tipo</th><th>Referência</th><th>Estado</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>${productRows}</tbody>
+          </table>
+          </div>
+          ` : '<p class="empty muted">Não foi possível carregar a lista de produtos.</p>'}
         `
       } catch (error) {
         contentEl.innerHTML = `<p class="empty" style="color:#b42318;">${escapeHtml(error.message || 'Erro inesperado')}</p>`
