@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$recipient = 'geral@codigocosme.com';
 $senderName = trim((string)($_POST['sender_name'] ?? ''));
 $productName = trim((string)($_POST['product_name'] ?? ''));
 $productPrice = trim((string)($_POST['product_price'] ?? ''));
@@ -48,7 +47,7 @@ if (($proof['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
 
 $tmpPath = (string)$proof['tmp_name'];
 $fileSize = (int)$proof['size'];
-$fileName = basename((string)$proof['name']);
+$originalFileName = basename((string)$proof['name']);
 
 if ($fileSize <= 0 || $fileSize > 1024 * 1024) {
     http_response_code(422);
@@ -70,59 +69,104 @@ if ($mimeType !== 'application/pdf') {
     exit;
 }
 
-$safeSender = preg_replace('/[\r\n]+/', ' ', $senderName) ?: 'Convidado';
-$subject = 'Comprovativo de Presente - ' . $productName;
+$uploadDir = __DIR__ . '/uploads/gift-proofs';
+$dataDir = __DIR__ . '/data';
+$dataFile = $dataDir . '/gift-submissions.json';
+$statusFile = $dataDir . '/gift-status.json';
 
-$bodyText =
-    "Foi submetido um novo comprovativo de presente.\n\n" .
-    "Oferecedor: {$safeSender}\n" .
-    "Produto: {$productName}\n" .
-    "Valor: {$productPrice}\n" .
-    "Referência: Presente de Casamento {$productReference}\n" .
-    "Ficheiro: {$fileName}\n";
+if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Não foi possível preparar a pasta de uploads.']);
+    exit;
+}
 
-$fileContent = file_get_contents($tmpPath);
-if ($fileContent === false) {
+if (!is_dir($dataDir) && !mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Não foi possível preparar a pasta de dados.']);
+    exit;
+}
+
+$safeBaseName = preg_replace('/[^a-zA-Z0-9._-]/', '-', pathinfo($originalFileName, PATHINFO_FILENAME)) ?: 'comprovativo';
+$storedFileName = sprintf('%s-%s.pdf', date('YmdHis'), bin2hex(random_bytes(4)) . '-' . $safeBaseName);
+$storedPath = $uploadDir . '/' . $storedFileName;
+
+if (!move_uploaded_file($tmpPath, $storedPath)) {
     http_response_code(500);
     echo json_encode([
         'ok' => false,
-        'message' => 'Não foi possível ler o comprovativo.'
+        'message' => 'Não foi possível guardar o comprovativo.'
     ]);
     exit;
 }
 
-$boundary = '=_GiftProof_' . bin2hex(random_bytes(12));
-$headers = [];
-$headers[] = 'MIME-Version: 1.0';
-$headers[] = 'From: Wedding Site <no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '>';
-$headers[] = 'Reply-To: ' . $safeSender;
-$headers[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+$submission = [
+    'id' => bin2hex(random_bytes(8)),
+    'submitted_at' => gmdate('c'),
+    'sender_name' => preg_replace('/[\r\n]+/', ' ', $senderName),
+    'product_name' => $productName,
+    'product_price' => $productPrice,
+    'product_reference' => $productReference,
+    'proof_original_name' => $originalFileName,
+    'proof_stored_name' => $storedFileName,
+    'proof_url' => 'uploads/gift-proofs/' . rawurlencode($storedFileName),
+    'proof_size' => $fileSize
+];
 
-$message = "--{$boundary}\r\n";
-$message .= "Content-Type: text/plain; charset=\"UTF-8\"\r\n";
-$message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-$message .= $bodyText . "\r\n";
+$submissions = [];
+if (is_file($dataFile)) {
+    $existingJson = file_get_contents($dataFile);
+    if ($existingJson !== false) {
+        $decoded = json_decode($existingJson, true);
+        if (is_array($decoded)) {
+            $submissions = $decoded;
+        }
+    }
+}
 
-$message .= "--{$boundary}\r\n";
-$message .= "Content-Type: application/pdf; name=\"{$fileName}\"\r\n";
-$message .= "Content-Transfer-Encoding: base64\r\n";
-$message .= "Content-Disposition: attachment; filename=\"{$fileName}\"\r\n\r\n";
-$message .= chunk_split(base64_encode($fileContent)) . "\r\n";
-$message .= "--{$boundary}--";
+array_unshift($submissions, $submission);
 
-$sent = mail($recipient, $subject, $message, implode("\r\n", $headers));
-
-if (!$sent) {
+if (file_put_contents($dataFile, json_encode($submissions, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) {
     http_response_code(500);
     echo json_encode([
         'ok' => false,
-        'message' => 'Não foi possível enviar o email neste momento.'
+        'message' => 'Não foi possível guardar os dados do presente.'
+    ]);
+    exit;
+}
+
+$giftStatus = ['blocked_references' => []];
+if (is_file($statusFile)) {
+    $statusRaw = file_get_contents($statusFile);
+    if ($statusRaw !== false) {
+        $decodedStatus = json_decode($statusRaw, true);
+        if (is_array($decodedStatus)) {
+            $giftStatus = $decodedStatus;
+        }
+    }
+}
+
+$blockedReferences = $giftStatus['blocked_references'] ?? [];
+if (!is_array($blockedReferences)) {
+    $blockedReferences = [];
+}
+
+$blockedSet = [];
+foreach ($blockedReferences as $reference) {
+    $blockedSet[(string)$reference] = true;
+}
+$blockedSet[$productReference] = true;
+
+$giftStatus['blocked_references'] = array_values(array_keys($blockedSet));
+if (file_put_contents($statusFile, json_encode($giftStatus, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) {
+    http_response_code(500);
+    echo json_encode([
+        'ok' => false,
+        'message' => 'Não foi possível atualizar o estado do presente.'
     ]);
     exit;
 }
 
 echo json_encode([
     'ok' => true,
-    'message' => 'Comprovativo enviado com sucesso para geral@codigocosme.com.'
+    'message' => 'Enviado com sucesso.'
 ]);
-

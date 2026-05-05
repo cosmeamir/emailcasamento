@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Presentes</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+    .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.08); overflow: hidden; }
+    .head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap: 8px; flex-wrap: wrap; }
+    h1 { font-size: 1.2rem; margin: 0; }
+    .head-actions { display:flex; gap:8px; flex-wrap: wrap; }
+    button { border: none; background: #70A076; color:#fff; padding: 8px 14px; border-radius: 999px; cursor:pointer; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: .92rem; }
+    th { background: #f9fafb; }
+    .muted { color:#6b7280; }
+    .empty { padding: 28px; text-align:center; }
+    a.pdf { color:#2563eb; text-decoration:none; font-weight:600; }
+    .section-title { padding: 14px 20px 0; font-size: 1rem; }
+    .status-badge { display:inline-block; border-radius:999px; padding:3px 8px; font-size:.78rem; font-weight:700; }
+    .status-badge.sent { background:#fee4e2; color:#b42318; }
+    .status-badge.active { background:#dcfae6; color:#067647; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .row-actions button { padding:6px 10px; font-size:.82rem; }
+
+    .hidden { display: none; }
+    .login-panel { max-width: 420px; margin: 80px auto; }
+    .login-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .login-body input {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .95rem;
+    }
+    .error { color: #b42318; font-size: .9rem; }
+
+    @media (max-width: 768px) {
+      .wrap { margin: 20px auto; }
+      .login-panel { margin: 24px auto; }
+      .head { padding: 14px; }
+      h1 { font-size: 1.05rem; }
+      .head-actions { width: 100%; }
+      .head-actions button { flex: 1; }
+      table { min-width: 0; }
+      thead { display: none; }
+      tbody, tr, td { display: block; width: 100%; }
+      tr { border-bottom: 1px solid #e5e7eb; padding: 8px 12px; }
+      td { border: none; padding: 6px 0; font-size: .9rem; }
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: #6b7280;
+        font-size: .78rem;
+        margin-bottom: 2px;
+      }
+      td:last-child { padding-bottom: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="login-panel" class="card login-panel hidden">
+      <div class="head">
+        <h1>Painel de Login</h1>
+      </div>
+      <form id="login-form" class="login-body">
+        <label for="username">Utilizador</label>
+        <input id="username" name="username" type="text" placeholder="admin" required>
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" required>
+        <small id="login-feedback" class="error"></small>
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
+
+    <div id="dashboard-card" class="card hidden">
+      <div class="head">
+        <h1>Dashboard - Presentes Enviados</h1>
+        <div class="head-actions">
+          <button id="reload-btn" type="button">Atualizar</button>
+          <button id="logout-btn" type="button" style="background:#b42318;">Sair</button>
+        </div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+
+  <script>
+    const contentEl = document.getElementById('content')
+    const reloadBtn = document.getElementById('reload-btn')
+    const logoutBtn = document.getElementById('logout-btn')
+    const loginPanel = document.getElementById('login-panel')
+    const dashboardCard = document.getElementById('dashboard-card')
+    const loginForm = document.getElementById('login-form')
+    const loginFeedback = document.getElementById('login-feedback')
+    let blockedReferences = new Set()
+
+    const formatDate = iso => {
+      if (!iso) return '-'
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return iso
+      return d.toLocaleString('pt-PT')
+    }
+
+    const escapeHtml = value => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+
+    async function checkSession() {
+      const res = await fetch('admin-auth.php?action=status', { cache: 'no-store' })
+      const data = await res.json()
+      return Boolean(res.ok && data.ok && data.logged_in)
+    }
+
+    function showLogin() {
+      loginPanel.classList.remove('hidden')
+      dashboardCard.classList.add('hidden')
+    }
+
+    function showDashboard() {
+      loginPanel.classList.add('hidden')
+      dashboardCard.classList.remove('hidden')
+    }
+
+    async function login(username, password) {
+      const res = await fetch('admin-auth.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+
+      const data = await res.json().catch(() => ({ ok: false, message: 'Resposta inválida do servidor.' }))
+      if (!res.ok || !data.ok) throw new Error(data.message || 'Falha no login.')
+      return true
+    }
+
+    async function logout() {
+      await fetch('admin-auth.php?action=logout', { method: 'POST' })
+      showLogin()
+    }
+
+    const getGiftReferenceBaseCode = value => {
+      const text = String(value || '')
+      let hash = 0
+      for (let index = 0; index < text.length; index += 1) hash = (hash * 31 + text.charCodeAt(index)) % 9000
+      return String(hash + 1000).padStart(4, '0')
+    }
+
+    async function loadSiteProductsFromScript() {
+      const response = await fetch('assets/js/script.js', { cache: 'no-store' })
+      const source = await response.text()
+      const match = source.match(/const\\s+defaultGiftProducts\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*\\n\\s*const\\s+normalizeGiftProduct/)
+      if (!match) return []
+      const list = Function(`"use strict"; return ([${match[1]}]);`)()
+      if (!Array.isArray(list)) return []
+      return list.map((item, index) => ({
+        name: String(item?.name || `Produto-${index + 1}`),
+        behavior: String(item?.behavior || 'popup'),
+        reference: getGiftReferenceBaseCode(`${String(item?.name || `Produto-${index + 1}`)}-${index}`)
+      }))
+    }
+
+    async function postAction(payload) {
+      const response = await fetch('master-gifts.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = await response.json().catch(() => ({ ok: false, message: 'Resposta inválida do servidor.' }))
+      if (!response.ok || !data.ok) throw new Error(data.message || 'Falha na ação.')
+      blockedReferences = new Set(Array.isArray(data.blocked_references) ? data.blocked_references.map(String) : Array.from(blockedReferences))
+    }
+
+    async function loadGifts() {
+      contentEl.innerHTML = '<p class="empty muted">Carregando dados...</p>'
+      try {
+        const response = await fetch('master-gifts.php', { cache: 'no-store' })
+        const data = await response.json()
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || 'Falha ao carregar dados.')
+        }
+
+        const items = Array.isArray(data.items) ? data.items : []
+        blockedReferences = new Set(Array.isArray(data.blocked_references) ? data.blocked_references.map(String) : [])
+        const siteProducts = await loadSiteProductsFromScript()
+
+        const rows = items.map(item => `
+          <tr>
+            <td data-label="Data">${formatDate(item.submitted_at)}</td>
+            <td data-label="Nome">${escapeHtml(item.sender_name)}</td>
+            <td data-label="Presente">${escapeHtml(item.product_name)}</td>
+            <td data-label="Valor">${escapeHtml(item.product_price)}</td>
+            <td data-label="Referência">${escapeHtml(item.product_reference)}</td>
+            <td data-label="Comprovativo"><a class="pdf" href="${escapeHtml(item.proof_url)}" target="_blank" rel="noopener">Ver PDF</a></td>
+          </tr>
+        `).join('')
+
+        const productRows = siteProducts.map(item => {
+          const blocked = blockedReferences.has(String(item.reference))
+          return `
+          <tr>
+            <td data-label="Produto">${escapeHtml(item.name)}</td>
+            <td data-label="Tipo">${escapeHtml(item.behavior)}</td>
+            <td data-label="Referência">${escapeHtml(item.reference)}</td>
+            <td data-label="Estado"><span class="status-badge ${blocked ? 'sent' : 'active'}">${blocked ? 'Oferecido' : 'Ativo'}</span></td>
+            <td data-label="Ações">
+              <div class="row-actions">
+                ${blocked
+                  ? `<button data-action="reactivate" data-reference="${escapeHtml(item.reference)}" type="button">Reativar presente</button>`
+                  : `<button data-action="deactivate" data-reference="${escapeHtml(item.reference)}" type="button">Marcar oferecido</button>`}
+              </div>
+            </td>
+          </tr>`
+        }).join('')
+
+        contentEl.innerHTML = `
+          <h2 class="section-title">Todos os presentes (com ou sem comprovativo)</h2>
+          <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th><th>Tipo</th><th>Referência</th><th>Estado</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>${productRows}</tbody>
+          </table>
+          </div>
+          <h2 class="section-title">Comprovativos enviados</h2>
+          ${items.length ? '' : '<p class="empty muted">Ainda não há comprovativos enviados.</p>'}
+          ${items.length ? `
+          <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>Presente</th>
+                <th>Valor</th>
+                <th>Referência</th>
+                <th>Comprovativo</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          </div>
+          ` : ''}
+        `
+      } catch (error) {
+        contentEl.innerHTML = `<p class="empty" style="color:#b42318;">${escapeHtml(error.message || 'Erro inesperado')}</p>`
+      }
+    }
+
+    contentEl.addEventListener('click', async event => {
+      const button = event.target.closest('button[data-action][data-reference]')
+      if (!button) return
+      const reference = String(button.dataset.reference || '')
+      const action = String(button.dataset.action || '')
+      if (!reference) return
+      try {
+        button.disabled = true
+        if (action === 'deactivate') {
+          await postAction({ action: 'deactivate_reference', reference })
+        } else if (action === 'reactivate') {
+          await postAction({ action: 'reactivate_reference', reference })
+        }
+        await loadGifts()
+      } catch (error) {
+        alert(error.message || 'Falha ao atualizar presente.')
+      } finally {
+        button.disabled = false
+      }
+    })
+
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault()
+      loginFeedback.textContent = ''
+
+      const username = (document.getElementById('username').value || '').trim()
+      const password = (document.getElementById('password').value || '').trim()
+
+      try {
+        await login(username, password)
+        showDashboard()
+        await loadGifts()
+      } catch (error) {
+        loginFeedback.textContent = error.message || 'Credenciais inválidas.'
+      }
+    })
+
+    reloadBtn.addEventListener('click', loadGifts)
+    logoutBtn.addEventListener('click', logout)
+
+    ;(async () => {
+      const loggedIn = await checkSession().catch(() => false)
+      if (loggedIn) {
+        showDashboard()
+        loadGifts()
+      } else {
+        showLogin()
+      }
+    })()
+  </script>
+</body>
+</html>
