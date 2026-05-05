@@ -1253,6 +1253,13 @@ transition: all 300ms ease-in-out;
 .gift-offer-btn:hover{
   filter: brightness(95%);
 }
+.gift-offer-btn--sent,
+.gift-offer-btn--sent:hover{
+  background: #9ca3af;
+  color: #ffffff;
+  cursor: not-allowed;
+  filter: none;
+}
 .gift-modal-overlay{
   position: fixed;
   inset: 0;
