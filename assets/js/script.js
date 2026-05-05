@@ -505,10 +505,12 @@ const giftProofForm = $.getElementById('gift-proof-form')
 const giftProofInput = $.getElementById('gift-proof')
 const giftProofFeedback = $.getElementById('gift-proof-feedback')
 const giftSenderNameInput = $.getElementById('gift-sender-name')
+const SENT_GIFTS_STORAGE_KEY = 'sentWeddingGifts'
 let currentGiftSelection = {
   product: 'Presente',
   price: '',
-  reference: '0000'
+  reference: '0000',
+  buttonSelector: ''
 }
 const defaultGiftProducts = [
 
@@ -546,7 +548,16 @@ const defaultGiftProducts = [
   { name: 'Ar Condicionado 12000 Btu Split Inverter (In+Out)', price: 390990, behavior: 'link', image: 'assets/images/gifts/gift-9.svg' },
   { name: 'Frois', price: 32900, behavior: 'link', image: 'assets/images/gifts/gift-10.svg' },
   { name: 'Chaudry', price: 23800, behavior: 'link', image: 'assets/images/gifts/gift-1.svg' },
-  { name: 'Neres', price: 36000, behavior: 'link', image: 'assets/images/gifts/gift-2.svg' }
+  { name: 'Neres', price: 36000, behavior: 'link', image: 'assets/images/gifts/gift-2.svg' },
+  { name: 'Varinha Mágica Robot 750w Easy', price: 21900, behavior: 'link', image: 'assets/images/gifts/23.png', link: 'https://www.ncrangola.com/varinha-magica-robot-750w-easy/p' },
+  { name: 'Jarro Elétrico 2200W Loiza', price: 26990, behavior: 'link', image: 'assets/images/gifts/24.png', link: 'https://www.ncrangola.com/jarro-eletrico-2200w-loiza/p' },
+  { name: 'Batedeira 450w com suporte', price: 42560, behavior: 'link', image: 'assets/images/gifts/25.png', link: 'https://www.ncrangola.com/batedeira-450w-com-suporte/p' },
+  { name: 'Grelhador Maxim´S Plus Resistência', price: 54990, behavior: 'link', image: 'assets/images/gifts/26.png', link: 'https://www.ncrangola.com/grelhador-maxim-s-plus/p' },
+  { name: 'Ventoinha MI DE Pé SMART FAN', price: 98520, behavior: 'link', image: 'assets/images/gifts/27.png', link: 'https://www.ncrangola.com/ventoinha-mi-de-pe-smart-fan-1c-wht/p' },
+  { name: 'Barra de Som Stage Se Mini 2.0', price: 40550, behavior: 'link', image: 'assets/images/gifts/28.png', link: 'https://www.ncrangola.com/barra-de-som-stage-se-mini-2-0-24w-preto/p' },
+  { name: 'Coluna Tower Sky Charm Pro BT', price: 81540, behavior: 'link', image: 'assets/images/gifts/29.png', link: 'https://www.ncrangola.com/coluna-tower-sky-charm-pro-bt-40w-preta/p' },
+  { name: 'TV 65 Led DU7105 Uhd 4k Smart', price: 1067990, behavior: 'link', image: 'assets/images/gifts/30.png', link: 'https://www.ncrangola.com/tv-65-led-samsung-du7105-uhd-4k-smart-tv/p' },
+  { name: 'Arca Vertical 480L Nofrost Branca', price: 589990, behavior: 'link', image: 'assets/images/gifts/31.png', link: 'https://www.ncrangola.com/arca-vertical-480l-nofrost-branca/p' }
 ]
 
 const normalizeGiftProduct = product => {
@@ -599,6 +610,59 @@ const giftReferenceByProduct = (() => {
   return referenceMap
 })()
 
+const getSentGiftReferences = () => {
+  try {
+    const storedRefs = JSON.parse(localStorage.getItem(SENT_GIFTS_STORAGE_KEY) || '[]')
+    if (!Array.isArray(storedRefs)) return []
+    return storedRefs.map(item => String(item))
+  } catch (error) {
+    return []
+  }
+}
+
+const fetchBlockedGiftReferences = async () => {
+  try {
+    const response = await fetch('gift-status.php', { cache: 'no-store' })
+    const data = await response.json()
+    if (!response.ok || !data.ok || !Array.isArray(data.blocked_references)) {
+      return []
+    }
+
+    return data.blocked_references.map(item => String(item))
+  } catch (error) {
+    return []
+  }
+}
+
+const markGiftButtonAsSent = button => {
+  if (!button) return
+  button.disabled = true
+  button.classList.add('gift-offer-btn--sent')
+  button.textContent = 'Presente enviado'
+}
+
+const applySentGiftButtonsState = blockedReferences => {
+  if (!giftShopGrid) return
+  const sentGiftReferences = new Set([
+    ...getSentGiftReferences(),
+    ...(Array.isArray(blockedReferences) ? blockedReferences.map(item => String(item)) : [])
+  ])
+  giftShopGrid.querySelectorAll('.gift-offer-btn').forEach(button => {
+    const referenceCode = String(button.dataset.reference || '')
+    if (sentGiftReferences.has(referenceCode)) {
+      markGiftButtonAsSent(button)
+    }
+  })
+}
+
+const persistSentGiftReference = reference => {
+  const normalizedReference = String(reference || '').trim()
+  if (!normalizedReference) return
+  const sentGiftReferences = new Set(getSentGiftReferences())
+  sentGiftReferences.add(normalizedReference)
+  localStorage.setItem(SENT_GIFTS_STORAGE_KEY, JSON.stringify(Array.from(sentGiftReferences)))
+}
+
 if (giftShopGrid) {
   const cardsMarkup = giftProducts.map((product, index) => {
     const buttonLabel = product.behavior === 'link' ? 'Ver no site' : 'Oferecer Presente'
@@ -614,6 +678,8 @@ if (giftShopGrid) {
   `
   }).join('')
   giftShopGrid.innerHTML = cardsMarkup
+  applySentGiftButtonsState()
+  fetchBlockedGiftReferences().then(applySentGiftButtonsState)
 }
 
 const closeGiftModal = () => {
@@ -627,6 +693,7 @@ if (giftShopGrid && giftModalOverlay && giftModalProduct) {
     const button = event.target.closest('.gift-offer-btn')
     if (!button) return
     const behavior = String(button.dataset.behavior || 'popup').trim().toLowerCase()
+    if (button.disabled) return
 
     if (behavior === 'link') {
       const productName = button.dataset.product || ''
@@ -642,7 +709,8 @@ if (giftShopGrid && giftModalOverlay && giftModalProduct) {
     currentGiftSelection = {
       product,
       price,
-      reference: referenceCode
+      reference: referenceCode,
+      buttonSelector: `.gift-offer-btn[data-reference="${referenceCode}"][data-behavior="popup"]`
     }
     giftModalProduct.innerHTML = `<p><strong>Produto:</strong> ${product}</p><p><strong>Valor:</strong> ${price}</p>`
     if (giftTransferReference) {
@@ -711,7 +779,12 @@ if (giftProofForm && giftProofInput && giftProofFeedback) {
       }
 
       giftProofFeedback.style.color = '#4e8a59'
-      giftProofFeedback.textContent = result.message || 'Comprovativo enviado com sucesso.'
+      giftProofFeedback.textContent = result.message || 'Enviado com sucesso.'
+      persistSentGiftReference(currentGiftSelection.reference)
+      const selectedButton = giftShopGrid
+        ? giftShopGrid.querySelector(currentGiftSelection.buttonSelector)
+        : null
+      markGiftButtonAsSent(selectedButton)
       giftProofForm.reset()
       setTimeout(closeGiftModal, 1500)
     } catch (error) {
