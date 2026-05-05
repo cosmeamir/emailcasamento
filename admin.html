@@ -62,7 +62,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div id="login-panel" class="card login-panel hidden">
+    <div id="login-panel" class="card login-panel">
       <div class="head">
         <h1>Painel de Login</h1>
       </div>
@@ -154,14 +154,14 @@
     async function loadSiteProductsFromScript() {
       const response = await fetch('assets/js/script.js', { cache: 'no-store' })
       const source = await response.text()
-      const match = source.match(/const\\s+defaultGiftProducts\\s*=\\s*\\[([\\s\\S]*?)\\]\\s*\\n\\s*const\\s+normalizeGiftProduct/)
+      const match = source.match(/const\s+defaultGiftProducts\s*=\s*\[([\s\S]*?)\]\s*\n\s*const\s+normalizeGiftProduct/)
       if (!match) return []
       const list = Function(`"use strict"; return ([${match[1]}]);`)()
       if (!Array.isArray(list)) return []
       return list.map((item, index) => ({
-        name: String(item?.name || `Produto-${index + 1}`),
-        behavior: String(item?.behavior || 'popup'),
-        reference: getGiftReferenceBaseCode(`${String(item?.name || `Produto-${index + 1}`)}-${index}`)
+        name: String((item && item.name) || `Produto-${index + 1}`),
+        behavior: String((item && item.behavior) || 'popup'),
+        reference: getGiftReferenceBaseCode(`${String((item && item.name) || `Produto-${index + 1}`)}-${index}`)
       }))
     }
 
