@@ -158,11 +158,24 @@
       if (!match) return []
       const list = Function(`"use strict"; return ([${match[1]}]);`)()
       if (!Array.isArray(list)) return []
-      return list.map((item, index) => ({
-        name: String((item && item.name) || `Produto-${index + 1}`),
-        behavior: String((item && item.behavior) || 'popup'),
-        reference: getGiftReferenceBaseCode(`${String((item && item.name) || `Produto-${index + 1}`)}-${index}`)
-      }))
+      const normalized = list.map((item, index) => {
+        const name = String((item && item.name) || `Produto-${index + 1}`)
+        const explicitBehavior = String((item && item.behavior) || '').trim().toLowerCase()
+        const hasExternalLink = Boolean((item && item.link) || (item && item.siteUrl) || (item && item.url))
+        const behavior = explicitBehavior || (hasExternalLink ? 'link' : 'popup')
+        return {
+          name,
+          behavior,
+          reference: getGiftReferenceBaseCode(`${name}-${index}`)
+        }
+      })
+
+      const onlyLinkProducts = normalized.filter(item => item.behavior === 'link')
+      const uniqueByName = new Map()
+      onlyLinkProducts.forEach(item => {
+        if (!uniqueByName.has(item.name)) uniqueByName.set(item.name, item)
+      })
+      return Array.from(uniqueByName.values())
     }
 
     async function postAction(payload) {
@@ -239,7 +252,7 @@
           </table>
           </div>
           ` : ''}
-          <h2 class="section-title">Todos os presentes (com ou sem comprovativo)</h2>
+          <h2 class="section-title">Presentes sem comprovativo (produtos de link)</h2>
           <p class="muted" style="padding:0 20px 10px;">Total de produtos listados: ${siteProducts.length}</p>
           ${siteProducts.length ? `
           <div class="table-wrap">
